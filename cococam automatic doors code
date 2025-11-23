@@ -1,0 +1,70 @@
+#include <COCOCAM.h>
+#include <Wire.h>                                                                     
+#include <Servo.h>
+
+COCOCAM cococam;
+cococamResult result;
+
+
+int R = 9;    
+int G = 10;  
+int piezo = 11;     
+int servoPin = 12;                                                  
+Servo myservo;  
+int open = 90;   
+int close = 0;   
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  cococam.begin(Wire);
+  cococam.writeAlgorithm(ALGORITHM_FACE_RECOGNITION);
+ 
+  pinMode(R, OUTPUT);
+  pinMode(G, OUTPUT);
+  pinMode(piezo, OUTPUT);
+  myservo.attach(servoPin);  
+
+  digitalWrite(R, LOW);
+  digitalWrite(G, LOW);
+  noTone(piezoPin);
+}
+
+void loop() {
+  cococam.request();
+  while (cococam.available()) {
+    result = cococam.read();
+    
+    if (result.ID == 0) {                         
+      digitalWrite(R, HIGH);               
+      digitalWrite(G, LOW);                 
+
+      for(int i=0; i<2; i++){
+        tone(piezo, 1000, 200); 
+        delay(250);               
+      }
+      noTone(piezo);  
+      Serial.println(“첨보는 얼굴 문 안열거임");
+    }
+    
+    if (result.ID > 0) {    얼굴 인식 성공
+      digitalWrite(R, LOW);     
+      digitalWrite(G, HIGH);  
+
+     
+      tone(piezo, 659, 400); 
+      delay(500);               
+      noTone(piezo);         
+      Serial.print(result.ID);
+      Serial.println(“인식된 얼굴 문 열거임");
+      
+    
+      myservo.write(open);
+      delay(5000); 
+    
+     
+      myservo.write(close); 
+      delay(1000);  
+   }
+  }
+}
